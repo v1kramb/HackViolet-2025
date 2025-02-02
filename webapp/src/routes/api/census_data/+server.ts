@@ -1,14 +1,11 @@
 // API to get county data
-import { parse } from 'csv-parse';
-import * as fs from 'fs';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { parse } from 'csv-parse/sync';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import censusDataCsv from './census_county_data_scaled.csv?raw';
+import { nameToAbbrev } from '$lib/name_to_abbrev';
 
 // Define the CountyData type
-interface CountyData {
+export interface CountyData {
   State: string;
   County: string;
   data: {
@@ -33,51 +30,52 @@ interface CountyData {
   };
 }
 
+export type CensusData = {
+  [key in keyof typeof nameToAbbrev]: {
+    [key: string]: CountyData;
+  };
+};
+
 // Handles the POST request
-export async function POST({ request }: { request: Request }) {
-  try {
-    const { state, county } = await request.json();
-    if (!state) {
-      return new Response('Invalid request: State is required', { status: 400 });
-    }
+export async function GET() {
 
-    const counties = await getCounties(state);
-    if (county) {
-      const countyData = counties.find((c) => c.County === county);
-      if (!countyData) {
-        return new Response('County not found', { status: 404 });
-      }
-      return jsonResponse(countyData);
-    }
+  const counties = getData();
 
-    return jsonResponse(counties);
-  } catch (error) {
-    console.error('Error in POST handler:', error);
-    return new Response('Error getting counties', { status: 500 });
-  }
+  return jsonResponse(counties);
 }
 
 // Reads the CSV file and returns county data for a given state
-const getCounties = async (state: string): Promise<CountyData[]> => {
-  const csvFilePath = resolve(__dirname, 'census_county_data_scaled.csv');
+const getData = (): CensusData => {
   const headers = [
-    'State', 'County',
-    'Median_Household_Income_x', 'Poverty_Rate_x', 'Unemployment_Rate_x', 'Population_Density_x',
-    'Median_Age_x', 'Average_Age_x', 'Minority_Percentage_x', 'Female_Percentage_x',
-    'Median_Household_Income_y', 'Poverty_Rate_y', 'Unemployment_Rate_y', 'Population_Density_y',
-    'Median_Age_y', 'Average_Age_y', 'Minority_Percentage_y', 'Female_Percentage_y'
+    'State',
+    'County',
+    'Median_Household_Income_x',
+    'Poverty_Rate_x',
+    'Unemployment_Rate_x',
+    'Population_Density_x',
+    'Median_Age_x',
+    'Average_Age_x',
+    'Minority_Percentage_x',
+    'Female_Percentage_x',
+    'Median_Household_Income_y',
+    'Poverty_Rate_y',
+    'Unemployment_Rate_y',
+    'Population_Density_y',
+    'Median_Age_y',
+    'Average_Age_y',
+    'Minority_Percentage_y',
+    'Female_Percentage_y',
   ];
-
-  const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
-
-  return new Promise((resolve, reject) => {
-    parse(
-      fileContent,
-      { delimiter: ',', columns: headers, trim: true },
-      (error, result) => {
-        if (error) return reject(error);
-        
-        const filteredCounties = result.filter((county) => county.State === state).map((county) => ({
+  const data = parse(censusDataCsv, {
+    delimiter: ',',
+    columns: headers,
+    trim: true,
+  });
+  const stateData: CensusData = Object.keys(nameToAbbrev).reduce((acc: any, key: string) => {
+    acc[key.toLowerCase()] = data
+      .filter((county: any) => county.State === key.toLowerCase())
+      .reduce((a: any, county: any) => {
+        a[county.County] = {
           State: county.State,
           County: county.County,
           data: {
@@ -100,16 +98,17 @@ const getCounties = async (state: string): Promise<CountyData[]> => {
             Minority_Percentage: county.Minority_Percentage_y,
             Female_Percentage: county.Female_Percentage_y,
           },
-        }));
-
-        resolve(filteredCounties);
-      }
-    );
-  });
+        };
+        return a;
+      }, {});
+    return acc;
+  }, {});
+  return stateData;
 };
 
 // Returns a JSON response
-const jsonResponse = (data: any) => new Response(JSON.stringify(data), {
-  status: 200,
-  headers: { 'Content-Type': 'application/json' },
-});
+const jsonResponse = (data: any) =>
+  new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
