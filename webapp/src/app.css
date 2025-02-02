@@ -7,5 +7,11 @@
 @theme {
     --font-display: 'Poppins', sans-serif;
     --font-body: 'Libre Baskerville', serif;
+
+    --color-low: #ff324a;
+    --color-high: #13ff2b;
 }
 
+html, body {
+    height: 100%;
+}
