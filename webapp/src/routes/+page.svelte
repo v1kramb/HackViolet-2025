@@ -14,15 +14,21 @@
 
   let tags: string[] = $state([]);
 
-  import { animate, keyframes } from 'motion';
-  import type { CensusData, CountyData } from './api/census_data/+server.js';
-  import countyCensusCsv from './api/census_data/census_county_data_scaled.csv?raw';
+  import { animate } from 'motion';
+  import type { CensusData } from './api/census_data/+server.js';
 
   let infoDiv: HTMLDivElement;
 
   let censusData: CensusData | null = $state(null);
 
   let countyData: any | null = $state(null);
+
+  // svelte-ignore state_referenced_locally
+  let localSelectedCounty: typeof selectedCounty = $state($state.snapshot(selectedCounty));
+
+  $effect(() => {
+    localSelectedCounty = selectedCounty.county ? selectedCounty : localSelectedCounty;
+  });
 
   $effect(() => {
     (async () => {
@@ -134,7 +140,7 @@
               >
             </div>
             <button
-              class="rounded-xl bg-stone-100 px-2 py-1 outline-1 outline-slate-200 hover:bg-red-300 hover:outline-red-400 transition-colors cursor-pointer"
+              class="cursor-pointer rounded-xl bg-stone-100 px-2 py-1 outline-1 outline-slate-200 transition-colors hover:bg-red-300 hover:outline-red-400"
               onclick={() => {
                 tagsVisible = !tagsVisible;
               }}>T</button
@@ -173,7 +179,7 @@
                     </svg>
                   </span>
                 </label>
-                <label for={key}>{value}</label>
+                <label for={key} class="w-full text-right">{value}</label>
               </div>
             {/each}
           </div>
@@ -194,8 +200,8 @@
   <div bind:this={infoDiv} class="h-0 w-full grow-0 lg:h-full lg:w-0">
     <div class="mt-3 h-[16rem] w-full space-y-4 p-4 lg:mt-[30vh] lg:h-full lg:w-[24rem] lg:p-2">
       <h1 class="w-full text-3xl font-bold text-gray-700">
-        {selectedCounty.county}<span class="text-gray-500"
-          >, {nameToAbbrev[selectedCounty.state]}</span
+        {localSelectedCounty.county}<span class="text-gray-500"
+          >, {nameToAbbrev[localSelectedCounty.state]}</span
         >
       </h1>
       {#if countyData}
@@ -221,6 +227,6 @@
   </div>
 </div>
 
-<div class="absolute left-0 top-0">
-  <h1>{selectedCounty.county}<span>{selectedCounty.state}</span></h1>
+<div class="absolute left-0 top-0 pointer-events-none text-xs m-1 opacity-30">
+  Virgil
 </div>

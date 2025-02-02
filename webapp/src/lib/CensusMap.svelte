@@ -437,7 +437,6 @@
               stateCountyLayerMap.get(selectedState || '')?.clone({
                 pickable: true,
                 onDragStart: () => {},
-
               }),
             ],
           });
@@ -494,7 +493,7 @@
 </div>
 
 <div
-  class="pointer-events-none absolute z-10 rounded-3xl bg-white px-2 py-1 text-xs text-gray-700"
+  class="pointer-events-none absolute z-10 hidden rounded-3xl bg-white px-2 py-1 text-xs text-gray-700"
   bind:this={tooltip}
 >
   {tooltipText}
