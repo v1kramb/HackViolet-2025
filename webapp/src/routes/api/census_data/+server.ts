@@ -11,8 +11,26 @@ const __dirname = dirname(__filename);
 interface CountyData {
   State: string;
   County: string;
-  data: Record<string, number>;
-  percentage: Record<string, number>;
+  data: {
+    Median_Household_Income: number;
+    Poverty_Rate: number;
+    Unemployment_Rate: number;
+    Population_Density: number;
+    Median_Age: number;
+    Average_Age: number;
+    Minority_Percentage: number;
+    Female_Percentage: number;
+  };
+  percentage: {
+    Median_Household_Income: number;
+    Poverty_Rate: number;
+    Unemployment_Rate: number;
+    Population_Density: number;
+    Median_Age: number;
+    Average_Age: number;
+    Minority_Percentage: number;
+    Female_Percentage: number;
+  };
 }
 
 // Handles the POST request
@@ -62,8 +80,26 @@ const getCounties = async (state: string): Promise<CountyData[]> => {
         const filteredCounties = result.filter((county) => county.State === state).map((county) => ({
           State: county.State,
           County: county.County,
-          data: extractCountyData(county, '_x'),
-          percentage: extractCountyData(county, '_y'),
+          data: {
+            Median_Household_Income: county.Median_Household_Income_x,
+            Poverty_Rate: county.Poverty_Rate_x,
+            Unemployment_Rate: county.Unemployment_Rate_x,
+            Population_Density: county.Population_Density_x,
+            Median_Age: county.Median_Age_x,
+            Average_Age: county.Average_Age_x,
+            Minority_Percentage: county.Minority_Percentage_x,
+            Female_Percentage: county.Female_Percentage_x,
+          },
+          percentage: {
+            Median_Household_Income: county.Median_Household_Income_y,
+            Poverty_Rate: county.Poverty_Rate_y,
+            Unemployment_Rate: county.Unemployment_Rate_y,
+            Population_Density: county.Population_Density_y,
+            Median_Age: county.Median_Age_y,
+            Average_Age: county.Average_Age_y,
+            Minority_Percentage: county.Minority_Percentage_y,
+            Female_Percentage: county.Female_Percentage_y,
+          },
         }));
 
         resolve(filteredCounties);
@@ -71,18 +107,6 @@ const getCounties = async (state: string): Promise<CountyData[]> => {
     );
   });
 };
-
-// Extracts numerical data from county records
-const extractCountyData = (county: any, suffix: string) => ({
-  Median_Household_Income: county[`Median_Household_Income${suffix}`],
-  Poverty_Rate: county[`Poverty_Rate${suffix}`],
-  Unemployment_Rate: county[`Unemployment_Rate${suffix}`],
-  Population_Density: county[`Population_Density${suffix}`],
-  Median_Age: county[`Median_Age${suffix}`],
-  Average_Age: county[`Average_Age${suffix}`],
-  Minority_Percentage: county[`Minority_Percentage${suffix}`],
-  Female_Percentage: county[`Female_Percentage${suffix}`],
-});
 
 // Returns a JSON response
 const jsonResponse = (data: any) => new Response(JSON.stringify(data), {
