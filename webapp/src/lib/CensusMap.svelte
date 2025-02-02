@@ -19,14 +19,14 @@
   let {
     selectedCounty = $bindable(),
     censusData,
-    tags = $bindable(),
+    countyTags,
   }: {
     selectedCounty: {
       county: string;
       state: string;
     };
     censusData: CensusData;
-    tags: string[];
+    countyTags: string[];
   } = $props();
 
   const INITIAL_VIEW_STATE: MapViewState = {
@@ -97,7 +97,7 @@
   let deckInstance: Deck;
 
   $effect(() => {
-    if (tags) {
+    if (countyTags) {
       if (!deckInstance) {
         return;
       }
@@ -173,7 +173,7 @@
                 .lch()
                 .mix(
                   colorHigh.lch(),
-                  tags.reduce((acc, tag) => acc + parseFloat(data[tag]), 0) / tags.length,
+                  countyTags.reduce((acc, tag) => acc + parseFloat(data[tag]), 0) / countyTags.length,
                 )
                 .rgb()
                 .array() as any;
