@@ -54,4 +54,16 @@ df.to_csv("census_data/census_county_data.csv", index=False)
 df_scaled = df.copy()
 for col in df_scaled.columns[1:]:
     df_scaled[col] = (df_scaled[col] - df_scaled[col].min()) / (df_scaled[col].max() - df_scaled[col].min())
+    
+# Split first column into county and state
+df_scaled["County"] = df_scaled["Name"].apply(lambda x: x.split(",")[0])
+df_scaled["State"] = df_scaled["Name"].apply(lambda x: x.split(",")[1])
+
+# Remove the original Name column
+df_scaled = df_scaled.drop("Name", axis=1)
+
+# Make State the first column
+df_scaled = df_scaled[["State", "County", "Median_Household_Income", "Poverty_Rate", "Unemployment_Rate",
+                       "Population_Density", "Median_Age", "Average_Age", "Minority_Percentage", "Female_Percentage"]]
+
 df_scaled.to_csv("census_data/census_county_data_scaled.csv", index=False)
