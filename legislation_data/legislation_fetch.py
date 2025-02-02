@@ -4,7 +4,7 @@ Fetch all legislation passed in every state for the last year
 
 import requests
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 # LegiScan API Key (Replace with your actual API key)
 API_KEY = "b35e159d59fb4138f400194dc24fcce9"
@@ -13,7 +13,7 @@ API_KEY = "b35e159d59fb4138f400194dc24fcce9"
 BASE_URL = "https://api.legiscan.com/?key=" + API_KEY
 
 # Date range for last year
-one_year_ago = datetime.strptime((datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"), "%Y-%m-%d")
+one_year_ago = date(2023, 1, 1)
 
 # List of U.S. states (LegiScan uses abbreviations)
 STATES = [
@@ -47,7 +47,7 @@ def fetch_legislation(state_name):
         if isinstance(bill_info, dict) and "status_date" in bill_info:
             if not bill_info["status_date"]:
                 continue
-            bill_date = datetime.strptime(bill_info["status_date"], "%Y-%m-%d")
+            bill_date = datetime.strptime(bill_info["status_date"], "%Y-%m-%d").date()
             if bill_date >= one_year_ago and bill_info["status"] == 4: 
                 passed_bills.append(bill_info)
 
@@ -56,7 +56,7 @@ def fetch_legislation(state_name):
 def main():
     all_legislation = {}
 
-    for state in STATES:
+    for state in ["AL"]:
         print(f"Fetching legislation for {state}...")
         bills = fetch_legislation(state)
         all_legislation[state] = bills

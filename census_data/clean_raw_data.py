@@ -28,9 +28,20 @@ dp_03 = dp_03[dp_03_columns]
 dp_05 = dp_05[dp_05_columns]
 
 # Merge the dataframes
-df = dp_03.merge(dp_05, on="NAME")
+df = dp_03.merge(dp_05, on="NAME").drop(0, axis=0).replace('-', 0)
 print(df.head())
 print(df.columns)
+
+# Column types
+df = df.astype({
+    "DP03_0062E": int,  # Median Household Income
+    "DP03_0119PE": float,  # Poverty Rate
+    "DP03_0009PE": float,  # Unemployment Rate
+    "DP05_0001E": int,  # Population Density
+    "DP05_0018E": float,  # Median Age
+    "DP05_0019E": float,  # Average Age
+    "DP05_0077PE": float,  # Minority Percentage
+    "DP05_0003PE": float})
 
 # Rename the columns for better readability
 df.columns = ["Name", "Median_Household_Income", "Poverty_Rate", "Unemployment_Rate",
@@ -38,3 +49,9 @@ df.columns = ["Name", "Median_Household_Income", "Poverty_Rate", "Unemployment_R
 
 # Save to CSV
 df.to_csv("census_data/census_county_data.csv", index=False)
+
+# Scale all the columns (except first one) to be between 0 and 1
+df_scaled = df.copy()
+for col in df_scaled.columns[1:]:
+    df_scaled[col] = (df_scaled[col] - df_scaled[col].min()) / (df_scaled[col].max() - df_scaled[col].min())
+df_scaled.to_csv("census_data/census_county_data_scaled.csv", index=False)
