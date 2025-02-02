@@ -12,7 +12,8 @@
     state: '',
   });
 
-  let tags: string[] = $state([]);
+  let countyTags: string[] = $state([]);
+  let stateTags: string[] = $state([]);
 
   import { animate } from 'motion';
   import type { CensusData } from './api/census_data/+server.js';
@@ -94,7 +95,7 @@
   });
 
   $effect(() => {
-    console.log(tags);
+    console.log(countyTags);
   });
 
   const labels = {
@@ -107,7 +108,8 @@
     Female_Percentage: 'Female %',
   };
 
-  let tagsVisible = $state(true);
+  let countyTagsVisible = $state(false);
+  let stateTagsVisible = $state(false);
 </script>
 
 <svelte:window onresize={calcInfoBoxSize} />
@@ -116,72 +118,129 @@
   <div class="relative h-full w-full">
     <div class="relative left-0 top-0 h-full w-full">
       {#if censusData}
-        <CensusMap bind:selectedCounty {censusData} bind:tags />
+        <CensusMap bind:selectedCounty {censusData} {countyTags} />
       {/if}
-      <div class="absolute right-0 top-0 m-4 text-xs">
-        <div
-          class={`${tagsVisible ? 'w-full' : 'w-10'} float-right rounded-3xl bg-white p-2 shadow-md outline-1 outline-slate-200 transition-all duration-300 ease-in-out`}
-        >
-          <div class="flex w-full items-end justify-end gap-1 text-stone-800">
-            <div
-              class={`${tagsVisible ? 'w-full opacity-100' : 'w-0 opacity-0'} overflow-x-clip text-nowrap transition-all duration-300 ease-in-out`}
-            >
-              <button
-                class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
-                onclick={() => {
-                  tags = Object.keys(labels);
-                }}>ALL</button
+      <div class="absolute right-0 top-0 m-4 text-sm">
+        <div class="flex flex-col items-end justify-end gap-2">
+          <div
+            class={`${countyTagsVisible ? 'w-58' : 'w-[42px]'} float-right rounded-3xl bg-white p-2 shadow-md outline-1 outline-slate-200 transition-all duration-300 ease-in-out`}
+          >
+            <div class="flex w-full items-end justify-end gap-1 text-stone-800">
+              <div
+                class={`${countyTagsVisible ? 'w-full opacity-100' : 'w-0 opacity-0'} overflow-x-clip text-nowrap pl-[0.05rem] transition-all duration-300 ease-in-out`}
               >
+                <button
+                  class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
+                  onclick={() => {
+                    countyTags = Object.keys(labels);
+                  }}>ALL</button
+                >
+                <button
+                  class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
+                  onclick={() => {
+                    countyTags = [];
+                  }}>NONE</button
+                >
+              </div>
               <button
-                class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
+                class="cursor-pointer rounded-3xl bg-stone-100 px-2 py-1 outline-1 outline-slate-200 transition-colors hover:bg-red-300 hover:outline-red-400"
                 onclick={() => {
-                  tags = [];
-                }}>NONE</button
+                  countyTagsVisible = !countyTagsVisible;
+                }}>C</button
               >
             </div>
-            <button
-              class="cursor-pointer rounded-xl bg-stone-100 px-2 py-1 outline-1 outline-slate-200 transition-colors hover:bg-red-300 hover:outline-red-400"
-              onclick={() => {
-                tagsVisible = !tagsVisible;
-              }}>T</button
+            <div
+              class={`${countyTagsVisible ? 'h-34 w-full opacity-100' : 'h-0 w-0 opacity-0'} justify-between gap-2 overflow-clip text-nowrap transition-all duration-300 ease-in-out`}
             >
+              <div class="pt-2"></div>
+              <div class="flex flex-wrap">
+                {#each Object.entries(labels) as [key, value]}
+                  <div class="mx-0.5 my-1">
+                    <input
+                      type="checkbox"
+                      class="peer hidden"
+                      id={key}
+                      bind:group={countyTags}
+                      value={key}
+                    />
+                    <label
+                      for={key}
+                      class="rounded-2xl px-1.5 py-0.5 outline-1 outline-gray-300 peer-checked:bg-red-200 peer-checked:outline-red-400"
+                      >{value}</label
+                    >
+                  </div>
+                {/each}
+              </div>
+            </div>
           </div>
           <div
-            class={`${tagsVisible ? 'h-50 w-full opacity-100' : 'h-0 w-0 opacity-0'} flex flex-col justify-between gap-2 overflow-clip text-nowrap transition-all duration-300 ease-in-out`}
+            class={`${stateTagsVisible ? 'w-58' : 'w-[42px]'} float-right rounded-3xl bg-white p-2 shadow-md outline-1 outline-slate-200 transition-all duration-300 ease-in-out`}
           >
-            <div class="pt-1"></div>
-            {#each Object.entries(labels) as [key, value]}
-              <div class="flex items-center justify-between gap-2">
-                <label class="relative flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-lg border border-slate-300 bg-slate-100 checked:border-red-400 checked:bg-red-400"
-                    id={key}
-                    bind:group={tags}
-                    value={key}
-                  />
-                  <span
-                    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform text-white opacity-0 peer-checked:opacity-100"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-3.5 w-3.5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      stroke="currentColor"
-                      stroke-width="1"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                  </span>
-                </label>
-                <label for={key} class="w-full text-right">{value}</label>
+            <div class="flex w-full items-end justify-end gap-1 text-stone-800">
+              <div
+                class={`${stateTagsVisible ? 'w-full opacity-100' : 'w-0 opacity-0'} overflow-x-clip text-nowrap pl-[0.05rem] transition-all duration-300 ease-in-out`}
+              >
+                <button
+                  class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
+                  onclick={() => {
+                    
+                  }}>QUERY</button
+                >
+                <button
+                  class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
+                  onclick={() => {
+                    stateTags = [];
+                  }}>CLEAR</button
+                >
               </div>
-            {/each}
+              <button
+                class="cursor-pointer rounded-3xl bg-stone-100 px-2 py-1 outline-1 outline-slate-200 transition-colors hover:bg-red-300 hover:outline-red-400"
+                onclick={() => {
+                  stateTagsVisible = !stateTagsVisible;
+                }}>S</button
+              >
+            </div>
+            <div
+              class={`${stateTagsVisible ? 'max-h-64 min-h-20 w-full opacity-100' : 'max-h-0 w-0 opacity-0'} flex flex-col gap-2 overflow-clip text-nowrap rounded-md transition-all duration-300 ease-in-out`}
+            >
+              <div class="relative mt-2 px-[0.055rem]">
+                <input
+                  type="search"
+                  bind:value={search}
+                  class="w-full rounded-2xl px-2 py-1 outline-1 outline-gray-300"
+                  placeholder="Add a tag..."
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (search) stateTags = [...stateTags, search];
+                      search = '';
+                    }
+                  }}
+                />
+                <button
+                  class="absolute right-0 top-0 m-1 aspect-square h-[calc(100%-0.5rem)] rounded-2xl bg-stone-100 outline-1 outline-slate-200 transition-colors hover:bg-red-300 hover:outline-red-400"
+                  onclick={() => {
+                    if (search) stateTags = [...stateTags, search];
+                    search = '';
+                  }}>></button
+                >
+              </div>
+              <div class="flex flex-wrap overflow-y-scroll">
+                <div class="mt-2"></div>
+                {#each stateTags as tag, i}
+                  <div class="mx-0.5 my-1">
+                    <button
+                      class="rounded-2xl px-1.5 py-0.5 outline-1 outline-gray-300"
+                      onclick={() => {
+                        stateTags = stateTags.filter((_, j) => i !== j);
+                      }}>{tag}</button
+                    >
+                  </div>
+                {/each}
+                {#if stateTags.length === 0}
+                  <div class="mx-auto mt-2 text-gray-500">No tags</div>
+                {/if}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -198,7 +257,7 @@
     </div>
   </div>
   <div bind:this={infoDiv} class="h-0 w-full grow-0 lg:h-full lg:w-0">
-    <div class="mt-3 h-[16rem] w-full space-y-4 p-4 lg:mt-[30vh] lg:h-full lg:w-[24rem] lg:p-2">
+    <div class="mt-3 h-[16rem] w-full space-y-4 p-4 lg:mt-[30vh] lg:h-full lg:w-[24rem] lg:p-6">
       <h1 class="w-full text-3xl font-bold text-gray-700">
         {localSelectedCounty.county}<span class="text-gray-500"
           >, {nameToAbbrev[localSelectedCounty.state]}</span
@@ -208,7 +267,7 @@
         <div class="flex flex-row flex-wrap gap-2">
           {#each Object.keys(countyData) as key}
             <div
-              class={`grid grid-cols-[repeat(auto-fit,minmax(auto,1fr))] items-center gap-1 rounded-3xl px-2 py-1 outline-1 ${tags.includes(key) ? 'bg-red-100 text-black outline-red-500' : 'text-gray-500 outline-gray-500'}`}
+              class={`grid grid-cols-[repeat(auto-fit,minmax(auto,1fr))] items-center gap-1 rounded-3xl px-2 py-1 outline-1 ${countyTags.includes(key) ? 'bg-red-100 text-black outline-red-500' : 'text-gray-500 outline-gray-500'}`}
             >
               <div>
                 <span class=""
@@ -227,6 +286,4 @@
   </div>
 </div>
 
-<div class="absolute left-0 top-0 pointer-events-none text-xs m-1 opacity-30">
-  Virgil
-</div>
+<div class="pointer-events-none absolute left-0 top-0 m-1 text-xs opacity-30">Virgil</div>
