@@ -52,7 +52,7 @@
     if (countyData.county) {
       (async () => {
         console.log({ state: AbbrevToName[countyData.state] });
-        const response = await fetch('/api/add', {
+        const response = await fetch('/api/census_data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -67,6 +67,17 @@
       })();
     }
   });
+
+  const removeTag = (tagToRemove: string) => {
+    tags = tags.filter(tag => tag !== tagToRemove);
+  };
+
+  const addTag = () => {
+    if (search.trim()) {
+      tags = [...tags, search];
+      search = ''; // Clear the search input after adding the tag
+    }
+  };
 </script>
 
 <svelte:window onresize={calcInfoBoxSize} />
@@ -85,22 +96,24 @@
               bind:value={search}
               onkeydown={(e) => {
                 if (e.key === 'Enter') {
-                  tags = [...tags, search];
-                  search = '';
+                  addTag();
                   if (e.target instanceof HTMLInputElement) e.target.value = '';
                 }
               }}
             />
-            <button class="rounded-2xl bg-blue-500 p-2 text-white">Add</button>
+            <button onclick={addTag} class="rounded-2xl bg-blue-500 p-2 text-white">Add</button>
           </div>
           {#each tags as tag}
             <div
               class="mt-2 flex items-center justify-between gap-2 border-t-[1px] border-gray-300 px-2 pt-2"
             >
               <span>{tag}</span>
-              <button class="rounded-lg bg-red-500 text-white">Remove</button>
+              <button onclick={() => removeTag(tag)} class="rounded-lg bg-red-500 text-white">Remove</button>
+              <!-- If remove is pressed remove the tag associated with the button -->
+
             </div>
           {/each}
+          
           {#if tags.length === 0}
             <div class="text-center text-gray-500">No tags added</div>
           {/if}
