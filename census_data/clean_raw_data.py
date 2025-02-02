@@ -55,6 +55,8 @@ df_scaled = df.copy()
 for col in df_scaled.columns[1:]:
     df_scaled[col] = (df_scaled[col] - df_scaled[col].min()) / (df_scaled[col].max() - df_scaled[col].min())
     
+df_scaled = df.merge(df_scaled, on="Name")
+    
 # Split first column into county and state
 df_scaled["County"] = df_scaled["Name"].apply(lambda x: x.split(",")[0]).str.strip().str.lower()
 df_scaled["State"] = df_scaled["Name"].apply(lambda x: x.split(",")[1]).str.strip().str.lower()
@@ -62,8 +64,11 @@ df_scaled["State"] = df_scaled["Name"].apply(lambda x: x.split(",")[1]).str.stri
 # Remove the original Name column
 df_scaled = df_scaled.drop("Name", axis=1)
 
+print(df_scaled.columns)
+
 # Make State the first column
-df_scaled = df_scaled[["State", "County", "Median_Household_Income", "Poverty_Rate", "Unemployment_Rate",
-                       "Population_Density", "Median_Age", "Average_Age", "Minority_Percentage", "Female_Percentage"]]
+df_scaled = df_scaled[["State", "County", "Median_Household_Income_x", "Poverty_Rate_x", "Unemployment_Rate_x",
+                       "Population_Density_x", "Median_Age_x", "Average_Age_x", "Minority_Percentage_x", "Female_Percentage_x", "Median_Household_Income_y", "Poverty_Rate_y", "Unemployment_Rate_y",
+                       "Population_Density_y", "Median_Age_y", "Average_Age_y", "Minority_Percentage_y", "Female_Percentage_y"]]
 
 df_scaled.to_csv("census_data/census_county_data_scaled.csv", index=False)
