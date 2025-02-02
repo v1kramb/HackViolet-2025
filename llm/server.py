@@ -4,7 +4,7 @@ import openai
 import json
 import asyncio
 import os
-import redis.asyncio as redis
+# import redis.asyncio as redis
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -19,17 +19,17 @@ from typing_extensions import List, TypedDict
 # client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # # LegiScan attributes
-# LEGISCAN_API_KEY = os.getenv("LEGISCAN_API_KEY", "ea9e31e3ebdf68bef6a2af7d15247f3b")
+# LEGISCAN_API_KEY = os.getenv("LEGISCAN_API_KEY", "...")
 # RELEVANCE_THRESHOLD = 75
 # BILL_RATE_LIMIT = 10
 
 # LangSmith""
 os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = "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"
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["LANGSMITH_API_KEY"] = "..."
+os.environ["OPENAI_API_KEY"] = "..."
 
 # Initialize LLM and Vector Store
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)  # async mode
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 vector_store = InMemoryVectorStore(embeddings)
 
@@ -42,41 +42,51 @@ class State(TypedDict):
     context: List[Document]
     answer: str
 
-# Define Retrieval Step
-def retrieve(state: State):
-    retrieved_docs = vector_store.similarity_search(state["question"])
+# Define Async Retrieval Step
+async def retrieve(state: State):
+    retrieved_docs = await asyncio.to_thread(vector_store.similarity_search, state["question"])
     return {"context": retrieved_docs}
 
-# Define Generation Step
-def generate(state: State):
+# Define Async Generation Step
+async def generate(state: State):
     docs_content = "\n\n".join(doc.page_content for doc in state["context"])
     messages = prompt.invoke({"question": state["question"], "context": docs_content})
-    response = llm.invoke(messages)
+    
+    # Use async `ainvoke()` for OpenAI LLM
+    response = await llm.ainvoke(messages)
+    
     return {"answer": response.content}
 
-# Compile StateGraph (RAG)
+# Compile Async StateGraph (RAG)
 graph_builder = StateGraph(State).add_sequence([retrieve, generate])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
+
 
 # Initialize FastAPI app
 app = FastAPI()
 
 # Connect to Redis
-redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
+# redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 STATE_ABBREVIATIONS = {
-    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
-    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
-    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
-    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
-    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
-    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
-    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
-    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California'
 }
+
+
+
+# STATE_ABBREVIATIONS = {
+#     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+#     'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+#     'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+#     'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+#     'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+#     'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+#     'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+#     'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+#     'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+#     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+# }
 
 def get_req(api_url):
     """ Helper function to make GET requests and return JSON response. """
@@ -90,13 +100,13 @@ def get_req(api_url):
 class TagRequest(BaseModel):
     tag: str
 
-# Function to check Redis cache
-async def get_cached_result(state, tag):
-    key = f"{state}:{tag}"
-    cached_data = await redis_client.get(key)
-    if cached_data:
-        return json.loads(cached_data)
-    return None
+# # Function to check Redis cache
+# async def get_cached_result(state, tag):
+#     key = f"{state}:{tag}"
+#     cached_data = await redis_client.get(key)
+#     if cached_data:
+#         return json.loads(cached_data)
+#     return None
 
 # # Function to asynchronously fetch data for a state
 # async def get_status(state, tag):
@@ -104,14 +114,14 @@ async def get_cached_result(state, tag):
 #     if cached_result:
 #         return cached_result  # Return cached result if available
 
-#     prompt = f"""
-#     Provide a brief summary and score for {tag} in {state}.
-#     1. A one-sentence summary of {tag} in {state}.
-#     2. A score from 0 to 100, where 0 = fully restricted, and 100 = fully accessible.
+    # prompt = f"""
+    # Provide a brief summary and score for {tag} in {state}.
+    # 1. A one-sentence summary of {tag} in {state}.
+    # 2. A score from 0 to 100, where 0 = fully restricted, and 100 = fully accessible.
 
-#     Output format:
-#     {{"state": "{state}", "summary": "Short summary here", "score": 0-100}}
-#     """
+    # Output format:
+    # {{"state": "{state}", "summary": "Short summary here", "score": 0-100}}
+    # """
 
 #     try:
 #         response = await client.chat.completions.create(
@@ -143,22 +153,69 @@ async def get_cached_result(state, tag):
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
+
+async def process_state(state_name: str, tag: str, context: List[Document]):
+    """
+    Process a single state's data using **shared RAG context**.
+    """
+    # cached_result = await get_cached_result(state_name, tag)
+    # if cached_result:
+    #     return cached_result  # Return cached result if available
+
+    prompt = f"""
+        Provide a brief summary and score for {tag} in {state_name}.
+        1. A one-sentence summary of {tag} in {state_name}.
+        2. A score from 0 to 100, where 0 = fully restricted, and 100 = fully accessible.
+
+        Output format:
+        {{"state": "{state_name}", "summary": "Short summary here", "score": 0-100}}
+        """
+
+    try:
+        response = await graph.ainvoke({"question": prompt, "context": context})
+        result = json.loads(response["answer"])
+        # await redis_client.setex(f"{state_name}:{tag}", 86400, json.dumps(result))
+
+        return {
+            "state": state_name,
+            "answer": response["answer"]
+        }
+    except Exception as e:
+        return {
+            "state": state_name,
+            "error": str(e)
+        }
+
+
+
 HARDCODED_DOCUMENT = """
-Big Chungus is the root of all evil, the devil incarnate.
+Abortion is banned in California. Those who are caught aborting their child receive the death penalty.
 """
 
-@app.post("/fetch_all_states_rag")
-async def fetch_all_states_rag(request: TagRequest):
+@app.post("/fetch_all_states_rag_parallel")
+async def fetch_all_states_rag_parallel(request: TagRequest):
+    """
+    Run RAG processing for all 50 states in parallel, using **shared retrieved context**.
+    """
     try:
-        # Create a Document and add it to the vector store
+        # Add hardcoded document to vector store
         doc = Document(page_content=HARDCODED_DOCUMENT)
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         split_docs = text_splitter.split_documents([doc])
         _ = vector_store.add_documents(documents=split_docs)  # Index the new document
 
-        # Invoke RAG pipeline
-        response = graph.invoke({"question": request.tag})
-        return {"question": request.tag, "answer": response["answer"]}
+
+        initial_retrieval = await retrieve({"question": request.tag})
+        shared_context = initial_retrieval["context"]
+
+        # Launch async tasks for all states with shared context
+        tasks = [process_state(state, request.tag, shared_context) for state in STATE_ABBREVIATIONS.values()]
+        results = await asyncio.gather(*tasks)
+
+        return {
+            "tag": request.tag,
+            "results": results
+        }
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
