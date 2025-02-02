@@ -1,0 +1,13 @@
+fastapi
+pydantic
+openai
+json
+asyncio
+os
+redis
+langchain-openai
+langchain-core
+langchain
+langgraph
+typing-extensions
+uvicorn
