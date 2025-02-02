@@ -5,24 +5,38 @@ import json
 import asyncio
 import os
 import redis.asyncio as redis
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_core.vectorstores import InMemoryVectorStore
-from langchain.document_loaders import DirectoryLoader, TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
+from langchain_openai import ChatOpenAI #, OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from langgraph.graph import START, StateGraph
 from langchain import hub
+from langchain_core.documents import Document
 from typing_extensions import List, TypedDict
+import faiss
 
-# Envinronmental variables
+STATES = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California",
+    "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+    "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+    "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri",
+    "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+    "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+    "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+]
+
+# Set environment variables
 os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = "..."
-os.environ["OPENAI_API_KEY"] = "..."
+os.environ["LANGSMITH_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "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"
 
-# Initialize LLM and Vector Store
-llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)  # async mode
+# Initialize LLM and Load Persisted Vector Store
+llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-vector_store = InMemoryVectorStore(embeddings)
+
+vector_store = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
 
 # Define RAG Prompt
 prompt = hub.pull("rlm/rag-prompt")
@@ -35,7 +49,7 @@ class State(TypedDict):
 
 # Define Async Retrieval Step
 async def retrieve(state: State):
-    retrieved_docs = await asyncio.to_thread(vector_store.similarity_search, state["question"])
+    retrieved_docs = vector_store.similarity_search(state["question"])
     return {"context": retrieved_docs}
 
 # Define Async Generation Step
@@ -56,32 +70,8 @@ graph = graph_builder.compile()
 # Initialize FastAPI app
 app = FastAPI()
 
-# Runs RAG on locally stored documents for each of the 50 states
-filepath = "../legislation_data/state_data"
-loader = DirectoryLoader(filepath, glob='**/*.txt', loader_cls=TextLoader)
-docs = loader.load()
-
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-all_splits = text_splitter.split_documents(docs)
-_ = vector_store.add_documents(documents=all_splits)
-
-
 # Connect to Redis
 redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
-
-
-STATE_ABBREVIATIONS = {
-    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
-    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
-    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
-    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
-    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
-    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
-    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
-    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
-}
 
 # Define request body
 class TagRequest(BaseModel):
@@ -130,11 +120,12 @@ async def process_state(state_name: str, tag: str, context: List[Document]):
 async def fetch_all_states_rag_parallel(request: TagRequest):
     try:
         # Retrieve context for use in RAG
-        initial_retrieval = await retrieve({"question": request.tag})
-        shared_context = initial_retrieval["context"]
+        #initial_retrieval = await retrieve({"question": request.tag})
+        #shared_context = initial_retrieval["context"]
 
         # Launch async tasks for all states with shared context
-        tasks = [process_state(state, request.tag, shared_context) for state in STATE_ABBREVIATIONS.values()]
+        # tasks = [process_state(state, request.tag, shared_context) for state in STATES]
+        tasks = [process_state(state, request.tag, []) for state in STATES]
         results = await asyncio.gather(*tasks)
 
         return {
@@ -144,3 +135,4 @@ async def fetch_all_states_rag_parallel(request: TagRequest):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
