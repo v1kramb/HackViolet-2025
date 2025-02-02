@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Deck, FlyToInterpolator, LinearInterpolator } from '@deck.gl/core';
+  import { Deck, FlyToInterpolator, Layer, LinearInterpolator } from '@deck.gl/core';
   import type { MapViewState, PickingInfo, ViewStateMap } from '@deck.gl/core';
   import { GeoJsonLayer, PolygonLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
   // import { DataFilterExtension } from '@deck.gl/extensions';
@@ -12,16 +12,21 @@
   import type { Feature, FeatureCollection, Geometry, MultiPolygon } from 'geojson';
 
   import Color from 'color';
+  import type { CensusData, CountyData } from '../routes/api/census_data/+server';
 
   let tooltip: HTMLDivElement;
 
   let {
-    countyData = $bindable(),
+    selectedCounty = $bindable(),
+    censusData,
+    tags = $bindable(),
   }: {
-    countyData: {
+    selectedCounty: {
       county: string;
       state: string;
     };
+    censusData: CensusData;
+    tags: string[];
   } = $props();
 
   const INITIAL_VIEW_STATE: MapViewState = {
@@ -31,7 +36,7 @@
     minZoom: 3.5,
     maxZoom: 8,
   };
-  
+
   type StatePropertiesTypes = {
     geo_point_2d: { lon: number; lat: number };
     year: string;
@@ -81,8 +86,43 @@
   const clearSelected = () => {
     selectedState = null;
     tooltip.style.display = 'none';
-    countyData = { county: '', state: '' };
+    selectedCounty = { county: '', state: '' };
   };
+
+  let visible = new Map<string, GeoJsonLayer<CountyPropertiesTypes>>();
+  let preload = new Map<string, GeoJsonLayer<CountyPropertiesTypes>>();
+
+  let vs: MapViewState = INITIAL_VIEW_STATE;
+
+  let deckInstance: Deck;
+
+  $effect(() => {
+    if (tags) {
+      if (!deckInstance) {
+        return;
+      }
+      const old_layers = deckInstance.props.layers.slice();
+      if (!old_layers || old_layers.length === 0) {
+        return;
+      }
+      const filterLayers = old_layers.filter((layer) => {
+        if (layer && (layer as Layer).id.includes('counties-layer-')) {
+          return false;
+        }
+        return true;
+      });
+      for (let i = 0; i < old_layers.length; i++) {
+        if (!old_layers[i]) {
+          continue;
+        }
+        old_layers[i] = old_layers[i]!.clone({});
+      }
+      deckInstance.setProps({ layers: filterLayers });
+      setTimeout(() => {
+        deckInstance.setProps({ layers: old_layers });
+      }, 50);
+    }
+  });
 
   $effect(() => {
     (async () => {
@@ -112,7 +152,7 @@
             id: `counties-layer-${stateCode}`,
             data: county_data.features.filter((d) => d.properties.ste_code[0] === stateCode),
             opacity: 1,
-            pickable: false,
+            pickable: true,
             autoHighlight: true,
             highlightColor: [255, 255, 255, 128],
             stroked: true,
@@ -121,8 +161,23 @@
             getLineWidth: 20,
             lineWidthMinPixels: 1,
             getPointRadius: 100,
-            getFillColor: () =>
-              colorLow.lch().mix(colorHigh.lch(), Math.random()).rgb().array() as any,
+            getFillColor: (d) => {
+              const data =
+                censusData[d.properties.ste_name[0].toLowerCase() as keyof typeof nameToAbbrev][
+                  d.properties.coty_name_long[0].toLowerCase()
+                ].percentage;
+
+              // console.log(tags.reduce((acc, tag) => acc + data[tag], 0) / tags.length);
+
+              return colorLow
+                .lch()
+                .mix(
+                  colorHigh.lch(),
+                  tags.reduce((acc, tag) => acc + parseFloat(data[tag]), 0) / tags.length,
+                )
+                .rgb()
+                .array() as any;
+            },
             getLineColor: [255, 255, 255],
             transitions: {
               opacity: {
@@ -132,17 +187,22 @@
             },
             onHover: updateTooltip,
             onDrag: updateTooltip,
+            onDragStart: () => {
+              clearSelected();
+            },
             onClick: (pickable: PickingInfo<Feature<Geometry, CountyPropertiesTypes>>) => {
               let object = pickable.object;
               if (object) {
-                countyData.county =
-                  countyData.county === object.properties.coty_name_long[0]
+                selectedState = object.properties.ste_code[0];
+
+                selectedCounty.county =
+                  selectedCounty.county === object.properties.coty_name_long[0]
                     ? ''
                     : object.properties.coty_name_long[0];
 
-                countyData.state = nameToAbbrev[object.properties.ste_name[0]];
+                selectedCounty.state = object.properties.ste_name[0];
 
-                let coord = countyData.county
+                let coord = selectedCounty.county
                   ? object.properties.geo_point_2d
                   : stateCenterMap.get(object.properties.ste_code[0]) ||
                     object.properties.geo_point_2d;
@@ -155,7 +215,7 @@
                     ...INITIAL_VIEW_STATE,
                     longitude: coord.lon + (Math.random() - 0.5) / 100,
                     latitude: coord.lat,
-                    zoom: countyData.county ? 7 : 5.5,
+                    zoom: selectedCounty.county ? 7 : 5.5,
                     transitionDuration: dist * 200,
                     transitionEasing: (x: number) =>
                       x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
@@ -263,7 +323,7 @@
             transitionDone = true;
             transitionTimeout = null;
           }, dist * 50);
-          countyData = { county: '', state: '' };
+          selectedCounty = { county: '', state: '' };
           deckInstance.setProps({
             initialViewState: {
               ...INITIAL_VIEW_STATE,
@@ -288,13 +348,8 @@
         },
       });
 
-      // console.log(...stateCountyLayerMap.values());
-
-      let visible = new Map<string, GeoJsonLayer<CountyPropertiesTypes>>();
-      let preload = new Map<string, GeoJsonLayer<CountyPropertiesTypes>>();
-
       const loadStates = (viewState: MapViewState) => {
-        const max_dist = (6 - Math.min(Math.max(viewState.zoom, 4.75), 5.75)) ** 2 * 50 + 15;
+        const max_dist = (6 - Math.min(Math.max(viewState.zoom, 4.75), 5.25)) ** 2 * 50 + 15;
         const preload_dist = max_dist * 2;
 
         for (const e of visible) {
@@ -335,8 +390,6 @@
         visible.delete(selectedState || '');
       };
 
-      let vs: MapViewState = INITIAL_VIEW_STATE;
-
       const fullScreenPolygon = [
         [-180, -90],
         [180, -90],
@@ -375,14 +428,15 @@
               stateLayer,
               stateFillLayer,
               stateTextLayer,
-              ...visible.values(),
               ...preload.values(),
               stateOutlineLayer.clone({
                 lineWidthMinPixels: 2,
               }),
+              ...visible.values(),
               colorLayerCopy,
               stateCountyLayerMap.get(selectedState || '')?.clone({
                 pickable: true,
+                onDragStart: () => {},
               }),
             ],
           });
@@ -391,14 +445,14 @@
             layers: [
               stateLayer,
               stateFillLayer,
-              stateTextLayer,
-              ...[...visible.values()].map((e) =>
+              ...[...preload.values()].map((e) =>
                 e.clone({
                   opacity: 0,
                   pickable: false,
                 }),
               ),
-              ...[...preload.values()].map((e) =>
+              stateTextLayer,
+              ...[...visible.values()].map((e) =>
                 e.clone({
                   opacity: 0,
                   pickable: false,
@@ -408,6 +462,7 @@
               colorLayerCopy,
               stateCountyLayerMap.get(selectedState || '')?.clone({
                 pickable: true,
+                onDragStart: () => {},
               }),
             ],
           });
@@ -415,7 +470,7 @@
       };
 
       loadStates(INITIAL_VIEW_STATE);
-      const deckInstance = new Deck({
+      deckInstance = new Deck({
         canvas: 'deck-container',
         initialViewState: INITIAL_VIEW_STATE,
         controller: true,
@@ -438,7 +493,7 @@
 </div>
 
 <div
-  class="pointer-events-none absolute z-10 rounded-3xl bg-white px-2 py-1 text-xs text-gray-700"
+  class="pointer-events-none absolute z-10 hidden rounded-3xl bg-white px-2 py-1 text-xs text-gray-700"
   bind:this={tooltip}
 >
   {tooltipText}

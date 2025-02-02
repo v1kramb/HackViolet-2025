@@ -1,4 +1,4 @@
-export const nameToAbbrev: Record<string, string> = {
+export const nameToAbbrev = {
   Alabama: 'AL',
   Alaska: 'AK',
   Arizona: 'AZ',
