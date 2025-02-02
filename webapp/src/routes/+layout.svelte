@@ -4,7 +4,7 @@
   import { pre } from 'motion/react-client';
 
   let text = '';
-  const targetText = 'Virgil';
+  const targetText = 'Virgil🔦';
   let index = 0;
   let showPreloader = true;
   let showAuthors = false;
@@ -13,7 +13,7 @@
   let preloader: HTMLDivElement;
 
   onMount(async () => {
-    // Type out "Vigil" smoothly with a shorter delay
+    // Type out "Virgil" smoothly with a shorter delay
     (async () => {for (index = 0; index < targetText.length; index++) {
       text += targetText[index];
       await new Promise((resolve) => setTimeout(resolve, 270 - (index**2 * 10))); // Shrink the delay to 80ms for faster typing

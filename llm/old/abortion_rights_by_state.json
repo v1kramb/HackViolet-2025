@@ -1,0 +1,252 @@
+[
+    {
+        "state": "Alabama",
+        "summary": "Abortion rights in Alabama are heavily restricted, with a near-total ban in effect and limited exceptions, reflecting a significant erosion of access to reproductive healthcare.",
+        "score": 10
+    },
+    {
+        "state": "Alaska",
+        "summary": "Abortion rights in Alaska are relatively accessible, with no mandatory waiting periods and the procedure being covered by Medicaid, although there are some restrictions in place, such as parental consent for minors.",
+        "score": 85
+    },
+    {
+        "state": "Arizona",
+        "summary": "Abortion rights in Arizona are limited, with restrictions such as a mandatory 24-hour waiting period, consent requirements for minors, and a ban on abortions after 15 weeks gestation.",
+        "score": 30
+    },
+    {
+        "state": "Arkansas",
+        "summary": "Abortion rights in Arkansas are heavily restricted, with near-total bans in place and limited access to reproductive healthcare services.",
+        "score": 10
+    },
+    {
+        "state": "California",
+        "summary": "California has strong legal protections for abortion rights, ensuring access with limited restrictions after the recent legislative measures and judicial commitments to uphold reproductive rights.",
+        "score": 95
+    },
+    {
+        "state": "Colorado",
+        "summary": "Abortion rights in Colorado are highly protected, with state laws ensuring access to abortion services and a strong commitment to reproductive rights.",
+        "score": 90
+    },
+    {
+        "state": "Connecticut",
+        "summary": "Connecticut has strong protections for abortion rights, ensuring that the procedure is accessible and supported by state law.",
+        "score": 90
+    },
+    {
+        "state": "Delaware",
+        "summary": "Abortion is legal in Delaware with few restrictions, allowing access up to viability and beyond in certain circumstances.",
+        "score": 85
+    },
+    {
+        "state": "Florida",
+        "summary": "Abortion rights in Florida are currently limited by a 15-week gestational limit with few exceptions, reflecting a political landscape that has leaned towards increasing restrictions.",
+        "score": 40
+    },
+    {
+        "state": "Georgia",
+        "summary": "Abortion rights in Georgia are significantly restricted, with a law banning the procedure after six weeks of pregnancy, although it faces ongoing legal challenges.",
+        "score": 30
+    },
+    {
+        "state": "Hawaii",
+        "summary": "Hawaii has broadly protected abortion rights, allowing access to the procedure with few restrictions and affirming reproductive rights in state law.",
+        "score": 90
+    },
+    {
+        "state": "Idaho",
+        "summary": "Abortion rights in Idaho are heavily restricted, with a near-total ban in place and limited access to services.",
+        "score": 15
+    },
+    {
+        "state": "Illinois",
+        "summary": "Abortion rights in Illinois are strongly protected, with access to safe and legal abortion upheld by state law and supported by recent legislative measures.",
+        "score": 90
+    },
+    {
+        "state": "Indiana",
+        "summary": "Abortion rights in Indiana are highly restricted, with several laws imposing waiting periods, mandatory counseling, and a ban on most abortions after six weeks of pregnancy.",
+        "score": 30
+    },
+    {
+        "state": "Iowa",
+        "summary": "Abortion rights in Iowa have faced significant restrictions, including a recent ban on most abortions after six weeks, but legal challenges continue to impact access.",
+        "score": 30
+    },
+    {
+        "state": "Kansas",
+        "summary": "Abortion rights in Kansas are currently legal but face numerous restrictions, including a mandatory 24-hour waiting period and parental consent for minors.",
+        "score": 65
+    },
+    {
+        "state": "Kentucky",
+        "summary": "Abortion rights in Kentucky are severely restricted, with a near-total ban in place and limited access to providers.",
+        "score": 15
+    },
+    {
+        "state": "Louisiana",
+        "summary": "Abortion rights in Louisiana are heavily restricted, with significant barriers such as mandatory waiting periods and limited access to facilities, especially following the Supreme Court's decision to overturn Roe v. Wade.",
+        "score": 10
+    },
+    {
+        "state": "Maine",
+        "summary": "Abortion rights in Maine are protected by state law, ensuring access to reproductive health services without significant restrictions.",
+        "score": 90
+    },
+    {
+        "state": "Maryland",
+        "summary": "Abortion rights in Maryland are protected by state law, ensuring access to abortion services without significant restrictions throughout the pregnancy.",
+        "score": 90
+    },
+    {
+        "state": "Massachusetts",
+        "summary": "Abortion rights in Massachusetts are legally protected, allowing access to abortion services with few restrictions up to the point of fetal viability.",
+        "score": 90
+    },
+    {
+        "state": "Michigan",
+        "summary": "Abortion rights in Michigan are currently protected following the state's Supreme Court decision and the passage of a voter-initiated constitutional amendment, allowing for greater access to abortion services despite some ongoing legislative challenges.",
+        "score": 75
+    },
+    {
+        "state": "Minnesota",
+        "summary": "Abortion rights in Minnesota are strongly protected, with no major restrictions on access and legal provisions ensuring the right to choose.",
+        "score": 85
+    },
+    {
+        "state": "Mississippi",
+        "summary": "Abortion rights in Mississippi are heavily restricted, with a near-total ban in effect and limited access to reproductive healthcare services.",
+        "score": 10
+    },
+    {
+        "state": "Missouri",
+        "summary": "Abortion rights in Missouri are highly restricted, with stringent regulations and a near-total ban following the overturning of Roe v. Wade.",
+        "score": 10
+    },
+    {
+        "state": "Montana",
+        "summary": "Abortion rights in Montana are relatively accessible, with state law protecting the right to choose, although there are some restrictions in place.",
+        "score": 75
+    },
+    {
+        "state": "Nebraska",
+        "summary": "Abortion rights in Nebraska are subject to several restrictions, including a mandatory 20-week gestational limit and parental consent requirements for minors, making access comparatively limited.",
+        "score": 40
+    },
+    {
+        "state": "Nevada",
+        "summary": "Abortion rights in Nevada are protected by state law, allowing access to the procedure up to 24 weeks of pregnancy, with various provisions for accessibility and funding.",
+        "score": 85
+    },
+    {
+        "state": "New Hampshire",
+        "summary": "Abortion rights in New Hampshire are relatively accessible, with no mandatory waiting periods or parental consent requirements for minors, but with some regulations in place.",
+        "score": 75
+    },
+    {
+        "state": "New Jersey",
+        "summary": "Abortion rights in New Jersey are protected under state law, allowing access to abortion services without significant restrictions.",
+        "score": 85
+    },
+    {
+        "state": "New Mexico",
+        "summary": "Abortion is fully accessible in New Mexico, with no major restrictions on the procedure and protections for providers and patients alike.",
+        "score": 95
+    },
+    {
+        "state": "New York",
+        "summary": "Abortion rights in New York are strongly protected, ensuring access to abortion services and safeguarding reproductive choices through state laws.",
+        "score": 95
+    },
+    {
+        "state": "North Carolina",
+        "summary": "Abortion rights in North Carolina are moderately accessible, with a current law allowing abortions up to 20 weeks of pregnancy and some parental consent requirements for minors.",
+        "score": 65
+    },
+    {
+        "state": "North Dakota",
+        "summary": "Abortion rights in North Dakota are highly restricted, with only limited access primarily due to stringent regulations and legal challenges.",
+        "score": 20
+    },
+    {
+        "state": "Ohio",
+        "summary": "Abortion rights in Ohio are currently restricted, with a ban in place after six weeks of pregnancy and limited access to services.",
+        "score": 30
+    },
+    {
+        "state": "Oklahoma",
+        "summary": "Abortion rights in Oklahoma are highly restricted, with stringent laws leading to significant barriers for access to abortion services.",
+        "score": 10
+    },
+    {
+        "state": "Oregon",
+        "summary": "Oregon maintains some of the most progressive abortion rights in the United States, with legal protections ensuring access to abortion services without significant restrictions.",
+        "score": 95
+    },
+    {
+        "state": "Pennsylvania",
+        "summary": "Abortion rights in Pennsylvania are subject to various state regulations, including a mandatory 24-hour waiting period and parental consent for minors, but the procedure remains legal and accessible up to 24 weeks of pregnancy.",
+        "score": 65
+    },
+    {
+        "state": "Rhode Island",
+        "summary": "Abortion is legal and accessible in Rhode Island, with protections in place to ensure reproductive rights.",
+        "score": 85
+    },
+    {
+        "state": "South Carolina",
+        "summary": "Abortion rights in South Carolina are significantly restricted following the state's enactment of a law banning most abortions after six weeks of pregnancy.",
+        "score": 30
+    },
+    {
+        "state": "South Dakota",
+        "summary": "Abortion rights in South Dakota are severely restricted, with few exceptions and significant legal barriers in place.",
+        "score": 10
+    },
+    {
+        "state": "Tennessee",
+        "summary": "Abortion rights in Tennessee are highly restricted, with significant limitations on access following the state's trigger law banning nearly all abortions.",
+        "score": 10
+    },
+    {
+        "state": "Texas",
+        "summary": "Abortion rights in Texas are heavily restricted, especially following the enactment of Senate Bill 8, which effectively bans most abortions after six weeks of pregnancy.",
+        "score": 10
+    },
+    {
+        "state": "Utah",
+        "summary": "Abortion rights in Utah are restricted, with significant limitations and regulations that include mandatory waiting periods and counseling requirements, as well as a ban on most abortions after 18 weeks of pregnancy.",
+        "score": 35
+    },
+    {
+        "state": "Vermont",
+        "summary": "Vermont has strong protections for abortion rights, with legislation ensuring access to reproductive services and no restrictions on the procedure up to the point of viability and beyond.",
+        "score": 95
+    },
+    {
+        "state": "Virginia",
+        "summary": "Abortion rights in Virginia are relatively accessible, especially following the repeal of restrictive laws, although some limitations remain in place.",
+        "score": 75
+    },
+    {
+        "state": "Washington",
+        "summary": "Abortion rights in Washington are strongly protected, with laws ensuring access to abortion services and proactive measures to safeguard reproductive rights.",
+        "score": 95
+    },
+    {
+        "state": "West Virginia",
+        "summary": "Abortion rights in West Virginia face significant restrictions, with recent legislation aiming to limit access and a triggering law in place that could further restrict abortion in the state.",
+        "score": 30
+    },
+    {
+        "state": "Wisconsin",
+        "summary": "Abortion rights in Wisconsin are severely restricted, with a near-total ban in place and limited access to services.",
+        "score": 20
+    },
+    {
+        "state": "Wyoming",
+        "summary": "Abortion rights in Wyoming are currently restricted, with significant limitations on access and provisions in place that hinder reproductive choices.",
+        "score": 30
+    }
+]

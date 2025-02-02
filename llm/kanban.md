@@ -1,0 +1,11 @@
+TODO:
+- [x] Get FastAPI Server working with basic 4o-mini calls
+- [x] Get request to work with desired output (async calls -> state, score)
+- [x] Cache responses with Redis
+- [ ] The big RAG
+    - [x] Perform RAG with a hardcoded document
+    - [x] RAG w/ proper output format
+    - [ ] Go from tag -> LegiScan -> document/text file
+    - [ ] RAG POST -> document creation -> output
+    - [ ] Automate document storage with ChromaDB
+- [ ] Add Redis again lmfao

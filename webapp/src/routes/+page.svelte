@@ -22,6 +22,8 @@
 
   let censusData: CensusData | null = $state(null);
 
+  let legislativeData: any | null = $state({});
+
   let countyData: any | null = $state(null);
 
   // svelte-ignore state_referenced_locally
@@ -35,6 +37,8 @@
     (async () => {
       // console.log('fetching census data');
       censusData = await (await fetch('/api/census_data', { method: 'GET' })).json();
+
+      //console.log(legislativeData);
       // console.log(censusData);
     })();
   });
@@ -108,8 +112,37 @@
     Female_Percentage: 'Female %',
   };
 
+  async function addStateTag() {
+    if (search) {;
+      try {
+        const response = await fetch('/api/legislative_data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ tag: search }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        legislativeData[search] = await response.json();
+        // console.log(legislativeData);
+
+      } catch (error) {
+        console.error("Error fetching legislative data:", error);
+      }
+    }
+    stateTags = [...stateTags, search]
+
+    search = '';
+  }
+
   let countyTagsVisible = $state(false);
   let stateTagsVisible = $state(false);
+
+  let searchInput: HTMLInputElement;
 </script>
 
 <svelte:window onresize={calcInfoBoxSize} />
@@ -118,9 +151,9 @@
   <div class="relative h-full w-full">
     <div class="relative left-0 top-0 h-full w-full">
       {#if censusData}
-        <CensusMap bind:selectedCounty {censusData} {countyTags} />
+        <CensusMap bind:selectedCounty {censusData} {countyTags} {legislativeData} {stateTags}/>
       {/if}
-      <div class="absolute right-0 top-0 m-4 text-sm">
+      <div class="absolute right-0 top-0 m-4 text-sm z-10">
         <div class="flex flex-col items-end justify-end gap-2">
           <div
             class={`${countyTagsVisible ? 'w-58' : 'w-[42px]'} float-right rounded-3xl bg-white p-2 shadow-md outline-1 outline-slate-200 transition-all duration-300 ease-in-out`}
@@ -183,12 +216,6 @@
                 <button
                   class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
                   onclick={() => {
-                    
-                  }}>QUERY</button
-                >
-                <button
-                  class="rounded-xl bg-white px-2 py-1 outline-1 outline-slate-200"
-                  onclick={() => {
                     stateTags = [];
                   }}>CLEAR</button
                 >
@@ -207,31 +234,34 @@
                 <input
                   type="search"
                   bind:value={search}
-                  class="w-full rounded-2xl px-2 py-1 outline-1 outline-gray-300"
+                  bind:this={searchInput}
+                  class="w-full rounded-2xl px-2 py-1 outline-1 outline-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="Add a tag..."
-                  onkeydown={(e) => {
+                  onkeydown={async (e) => {
                     if (e.key === 'Enter') {
-                      if (search) stateTags = [...stateTags, search];
-                      search = '';
+                      searchInput.disabled = true;
+                      await addStateTag();
+                      searchInput.disabled = false;
                     }
                   }}
                 />
                 <button
                   class="absolute right-0 top-0 m-1 aspect-square h-[calc(100%-0.5rem)] rounded-2xl bg-stone-100 outline-1 outline-slate-200 transition-colors hover:bg-red-300 hover:outline-red-400"
-                  onclick={() => {
-                    if (search) stateTags = [...stateTags, search];
-                    search = '';
+                  onclick={async () => {
+                    searchInput.disabled = true;
+                   await addStateTag();
+                   searchInput.disabled = false;
                   }}>></button
                 >
               </div>
-              <div class="flex flex-wrap overflow-y-scroll">
+              <div class="flex flex-wrap overflow-y-auto">
                 <div class="mt-2"></div>
                 {#each stateTags as tag, i}
                   <div class="mx-0.5 my-1">
                     <button
                       class="rounded-2xl px-1.5 py-0.5 outline-1 outline-gray-300"
                       onclick={() => {
-                        stateTags = stateTags.filter((_, j) => i !== j);
+                        stateTags = [...stateTags.filter((_, j) => i !== j)];
                       }}>{tag}</button
                     >
                   </div>

@@ -20,6 +20,8 @@
     selectedCounty = $bindable(),
     censusData,
     countyTags,
+    legislativeData,
+    stateTags,
   }: {
     selectedCounty: {
       county: string;
@@ -27,6 +29,8 @@
     };
     censusData: CensusData;
     countyTags: string[];
+    stateTags: string[];
+    legislativeData: Record<Record<string, { description: string; fill: number }>>;
   } = $props();
 
   const INITIAL_VIEW_STATE: MapViewState = {
@@ -65,17 +69,16 @@
 
   let tooltipText: string = $state('');
 
-  const updateTooltip = ({
-    object,
-    x,
-    y,
-  }: PickingInfo<Feature<Geometry, CountyPropertiesTypes>>) => {
+  const updateTooltip = (
+    { object, x, y }: PickingInfo<Feature<Geometry, CountyPropertiesTypes>>,
+    text: string,
+  ) => {
     if (object) {
       tooltip.style.display = 'block';
       tooltip.style.left = `${x}px`;
       tooltip.style.transform = 'translate(-50%, -120%)';
       tooltip.style.top = `${y}px`;
-      tooltipText = object.properties.coty_name_long[0];
+      tooltipText = text;
     } else {
       tooltip.style.display = 'none';
     }
@@ -95,6 +98,34 @@
   let vs: MapViewState = INITIAL_VIEW_STATE;
 
   let deckInstance: Deck;
+
+  $effect(() => {
+    if (stateTags) {
+      if (!deckInstance) {
+        return;
+      }
+      const old_layers = deckInstance.props.layers.slice();
+      if (!old_layers || old_layers.length === 0) {
+        return;
+      }
+      const filterLayers = old_layers.filter((layer) => {
+        if (layer && (layer as Layer).id.includes('states-fill-layer')) {
+          return false;
+        }
+        return true;
+      });
+      for (let i = 0; i < old_layers.length; i++) {
+        if (!old_layers[i]) {
+          continue;
+        }
+        old_layers[i] = old_layers[i]!.clone({});
+      }
+      deckInstance.setProps({ layers: filterLayers });
+      setTimeout(() => {
+        deckInstance.setProps({ layers: old_layers });
+      }, 50);
+    }
+  });
 
   $effect(() => {
     if (countyTags) {
@@ -173,7 +204,8 @@
                 .lch()
                 .mix(
                   colorHigh.lch(),
-                  countyTags.reduce((acc, tag) => acc + parseFloat(data[tag]), 0) / countyTags.length,
+                  countyTags.reduce((acc, tag) => acc + parseFloat(data[tag]), 0) /
+                    countyTags.length,
                 )
                 .rgb()
                 .array() as any;
@@ -185,8 +217,8 @@
                 easing: (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
               },
             },
-            onHover: updateTooltip,
-            onDrag: updateTooltip,
+            onHover: (p) => p.object && updateTooltip(p, p.object.properties.coty_name_long[0]),
+            onDrag: (p) => p.object && updateTooltip(p, p.object.properties.coty_name_long[0]),
             onDragStart: () => {
               clearSelected();
             },
@@ -252,6 +284,33 @@
         window.getComputedStyle(document.documentElement).getPropertyValue('--color-high'),
       );
 
+      const getStateColor = (stateCode: string) => {
+        if (!legislativeData || !stateCode) return [200, 200, 200];
+
+        // console.log(stateCode);
+
+        let datas = stateTags.map((tag) => legislativeData[tag][stateCode]);
+
+        // console.log(stateCode, datas)
+
+        let score = 0;
+        let a = 0;
+        for (let data of datas) {
+          if (!data) continue;
+          score += data.score;
+          a++;
+        }
+
+        if (a === 0) return [200, 200, 200]; // Default gray if no data
+
+        const normalizedScore = score / a / 100; // Convert 0-100 to 0-1 scale
+        return colorLow
+          .lch()
+          .mix(colorHigh.lch(), normalizedScore / datas.length)
+          .rgb()
+          .array();
+      };
+
       const stateFillLayer = new GeoJsonLayer<StatePropertiesTypes>({
         id: 'states-fill-layer',
         opacity: 1,
@@ -262,8 +321,8 @@
         filled: true,
         getLineWidth: 20,
         lineWidthMinPixels: 1,
-        getFillColor: () => colorLow.lch().mix(colorHigh.lab(), Math.random()).rgb().array() as any,
-        getLineColor: [255, 255, 255],
+        getFillColor: (d) => getStateColor(nameToAbbrev[d.properties.ste_name[0]]) as any,
+        getLineColor: [128, 255, 255],
         transitions: {
           getFillColor: {
             duration: 300,
@@ -309,6 +368,24 @@
         getFillColor: [0, 0, 0, 0],
         autoHighlight: true,
         highlightColor: [255, 255, 255, 128],
+        onHover: (p) => {
+          if (!p.object) return;
+          console.log(p.object.properties)
+          let state_info = stateTags.map(
+            (tag) => legislativeData[tag][nameToAbbrev[p.object.properties.ste_name[0]]],
+          );
+          console.log(state_info);
+          let state_text = state_info.map((info) => info.description).join('<br>');
+          updateTooltip(p, state_text);
+        },
+        onDrag: (p) => {
+          if (!p.object) return;
+          let state_info = stateTags.map(
+            (tag) => legislativeData[tag][nameToAbbrev[p.object.properties.ste_name[0]]],
+          );
+          let state_text = state_info.map((info) => info.description).join('<br>');
+          updateTooltip(p, state_text);
+        },
         onClick: ({ object }) => {
           selectedState = object.properties.ste_code[0];
           const dist = Math.sqrt(
@@ -425,7 +502,6 @@
         if (vs.zoom > 4.75) {
           deckInstance.setProps({
             layers: [
-              stateLayer,
               stateFillLayer,
               stateTextLayer,
               ...preload.values(),
@@ -443,7 +519,6 @@
         } else {
           deckInstance.setProps({
             layers: [
-              stateLayer,
               stateFillLayer,
               ...[...preload.values()].map((e) =>
                 e.clone({
@@ -496,5 +571,5 @@
   class="pointer-events-none absolute z-10 hidden rounded-3xl bg-white px-2 py-1 text-xs text-gray-700"
   bind:this={tooltip}
 >
-  {tooltipText}
+  {@html tooltipText}
 </div>
