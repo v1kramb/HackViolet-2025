@@ -8,12 +8,28 @@
   import CountyGeoJson from '$lib/data/counties.geojson?url';
   import StateGeoJson from '$lib/data/states.geojson?url';
   import type { Feature, FeatureCollection, Geometry, MultiPolygon } from 'geojson';
+  import { onMount } from 'svelte';
 
   const INITIAL_VIEW_STATE: MapViewState = {
     latitude: 40,
     longitude: -96,
     zoom: 4,
   };
+
+  // fetch from /add endpoint and print
+  // fetch('/add', {state: Virginia}}) on Mount
+
+  onMount(async () => {
+    const response = await fetch('/api/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ state: 'alaska' }),
+    });
+    const data = await response.json();
+    console.log(data);
+  });
 
   type StatePropertiesTypes = {
     geo_point_2d: { lon: number; lat: number };
